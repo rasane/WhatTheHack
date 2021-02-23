@@ -1,0 +1,120 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rasane-content-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rasane-content-api
+  template:
+    metadata:
+      labels: 
+        app: rasane-content-api
+    spec:
+      nodeSelector:
+        "beta.kubernetes.io/os": linux
+      containers:
+        - name: rasane-content-api
+          image: rasane.azurecr.io/rasane/wth-contentapi:v1
+          ports:
+            - containerPort: 3001
+          resources:
+            requests:
+              cpu: 250m
+            limits:
+              cpu: 500m
+          env:
+            - name: foo
+              value: "bar"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rasane-content-api
+spec: 
+  ports:
+  - port: 3001
+  selector:
+    app: rasane-content-api
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rasane-content-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rasane-content-web
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  minReadySeconds: 5
+  template:
+    metadata:
+      labels:
+        app: rasane-content-web
+    spec:
+      nodeSelector:
+        "beta.kubernetes.io/os": linux
+      containers:
+        - name: rasane-content-web
+          image: rasane.azurecr.io/rasane/wth-contentweb:v1
+          ports: 
+          - containerPort: 3000
+          resources:
+            requests: 
+              cpu: 250m
+            limits:
+              cpu: 500m
+          env:
+            - name: CONTENT_API_URL
+              value: "http://rasane-content-api:3001"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rasane-content-web
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 3000
+  selector:
+    app: rasane-content-web
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rasane-content-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rasane-content-db
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  minReadySeconds: 5
+  template:
+    metadata:
+      labels:
+        app: rasane-content-db
+    spec:
+      nodeSelector:
+        "beta.kubernetes.io/os": linux
+      containers:
+        - name: rasane-content-db
+          image: mongo:latest
+          resources:
+            requests: 
+              cpu: 250m
+            limits:
+              cpu: 500m
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: "root"
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              value: "0d1a4b93183c77b95a749ef825e233"

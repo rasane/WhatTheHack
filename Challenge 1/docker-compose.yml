@@ -1,0 +1,45 @@
+version: "3.9"
+services:
+  web:
+    build: ./content-web/.
+    image: rasane/wth-contentweb
+    ports:
+      - "8185:3000"
+    # volumes:
+      # - content-web/.:/usr/src/app
+    environment: 
+      CONTENT_API_URL : http://api:3001
+    container_name: wth_contentweb
+    depends_on: 
+      - api
+
+
+  api:
+    build: ./content-api/.
+    image: rasane/wth-contentapi
+    ports:
+      - "8186:3001"
+    container_name: wth_contentapi
+    
+  # db:
+  #   image: mongo:latest
+  #   restart: always
+  #   container_name: wth_contentdb
+  #   ports:
+  #     - "27017:27017"
+  #   environment:
+  #     MONGO_INITDB_ROOT_USERNAME: root
+  #     MONGO_INITDB_ROOT_PASSWORD: example
+
+  # mongo-express:
+  #   image: mongo-express
+  #   restart: always
+  #   container_name: wth_contentdbconfig
+  #   ports:
+  #     - "8081:8081"
+  #   environment:
+  #     ME_CONFIG_MONGODB_SERVER: wth_contentdb
+  #     ME_CONFIG_MONGODB_ADMINUSERNAME: root
+  #     ME_CONFIG_MONGODB_ADMINPASSWORD: example
+  #   depends_on: 
+  #     - db
